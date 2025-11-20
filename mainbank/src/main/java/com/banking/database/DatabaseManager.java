@@ -31,10 +31,12 @@ public class DatabaseManager {
         String customerTable = "CREATE TABLE IF NOT EXISTS customers (" +
             "id BIGINT AUTO_INCREMENT PRIMARY KEY," +
             "user_id BIGINT," +
-            "name VARCHAR(255) NOT NULL," +
-            "email VARCHAR(255) UNIQUE NOT NULL," +
+            "first_name VARCHAR(100) NOT NULL," +
+            "surname VARCHAR(100) NOT NULL," +
+            "address VARCHAR(255)," +
             "phone VARCHAR(20)," +
-            "FOREIGN KEY (user_id) REFERENCES users(id)" +
+            "email VARCHAR(255) NOT NULL," +
+            "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
             ")";
             
         String accountTable = "CREATE TABLE IF NOT EXISTS accounts (" +
@@ -44,7 +46,9 @@ public class DatabaseManager {
             "account_type VARCHAR(20) NOT NULL," +
             "balance DECIMAL(15,2) NOT NULL DEFAULT 0.00," +
             "interest_rate DECIMAL(5,4)," +
-            "FOREIGN KEY (customer_id) REFERENCES customers(id)" +
+            "branch VARCHAR(100)," +
+            "date_opened TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+            "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE" +
             ")";
             
         try (Statement stmt = conn.createStatement()) {

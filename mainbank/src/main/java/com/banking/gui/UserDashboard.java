@@ -32,23 +32,40 @@ public class UserDashboard extends BorderPane {
         profileTab.setClosable(false);
         
         // My Accounts Tab
+        UserAccountsPane accountsPane = new UserAccountsPane(currentUser);
         Tab accountsTab = new Tab("My Accounts");
-        accountsTab.setContent(new UserAccountsPane(currentUser));
+        accountsTab.setContent(accountsPane);
         accountsTab.setClosable(false);
         
-        tabPane.getTabs().addAll(profileTab, accountsTab);
+        // Refresh accounts when tab is selected
+        accountsTab.setOnSelectionChanged(e -> {
+            if (accountsTab.isSelected()) {
+                accountsPane.refresh();
+            }
+        });
+        
+        // Transactions Tab
+        Tab transactionsTab = new Tab("Transactions");
+        transactionsTab.setContent(new TransactionPane());
+        transactionsTab.setClosable(false);
+        
+        tabPane.getTabs().addAll(profileTab, accountsTab, transactionsTab);
         setCenter(tabPane);
     }
     
     private void logout() {
+        javafx.scene.Scene scene = getScene();
+        if (scene == null || scene.getWindow() == null) return;
+        
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Logout");
         alert.setHeaderText("Are you sure you want to logout?");
         
         if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            LoginPane loginPane = new LoginPane((javafx.stage.Stage) getScene().getWindow());
-            getScene().setRoot(loginPane);
-            ((javafx.stage.Stage) getScene().getWindow()).setTitle("Banking System - Login");
+            javafx.stage.Stage stage = (javafx.stage.Stage) scene.getWindow();
+            LoginPane loginPane = new LoginPane(stage);
+            scene.setRoot(loginPane);
+            stage.setTitle("Banking System - Login");
         }
     }
 }

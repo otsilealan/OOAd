@@ -28,5 +28,5 @@ public abstract class Account {
     public Customer getCustomer() { return customer; }
     public LocalDateTime getDateOpened() { return dateOpened; }
     
-    protected void setBalance(double balance) { this.balance = balance; }
+    public void setBalance(double balance) { this.balance = balance; }
 }

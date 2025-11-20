@@ -100,7 +100,32 @@ public class AccountManagementPane extends VBox {
         balanceCol.setCellValueFactory(new PropertyValueFactory<>("balance"));
         balanceCol.setPrefWidth(100);
         
-        accountTable.getColumns().addAll(numberCol, customerCol, typeCol, balanceCol);
+        TableColumn<AccountInfo, Void> actionCol = new TableColumn<>("Actions");
+        actionCol.setPrefWidth(150);
+        actionCol.setCellFactory(col -> new TableCell<>() {
+            private final Button editBtn = new Button("Edit");
+            private final Button deleteBtn = new Button("Delete");
+            private final HBox buttons = new HBox(5, editBtn, deleteBtn);
+            
+            {
+                editBtn.setOnAction(e -> {
+                    AccountInfo account = getTableView().getItems().get(getIndex());
+                    editAccount(account);
+                });
+                deleteBtn.setOnAction(e -> {
+                    AccountInfo account = getTableView().getItems().get(getIndex());
+                    deleteAccount(account);
+                });
+            }
+            
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : buttons);
+            }
+        });
+        
+        accountTable.getColumns().addAll(numberCol, customerCol, typeCol, balanceCol, actionCol);
     }
     
     private void loadCustomers() {
@@ -116,7 +141,8 @@ public class AccountManagementPane extends VBox {
     private void loadAccounts() {
         try {
             accountList.clear();
-            String sql = "SELECT a.account_number, c.name, a.account_type, a.balance FROM accounts a JOIN customers c ON a.customer_id = c.id";
+            String sql = "SELECT a.account_number, CONCAT(c.first_name, ' ', c.surname) as customer_name, a.account_type, a.balance " +
+                        "FROM accounts a JOIN customers c ON a.customer_id = c.id";
             try (var conn = com.banking.database.DatabaseManager.getConnection();
                  var stmt = conn.createStatement();
                  var rs = stmt.executeQuery(sql)) {
@@ -124,7 +150,7 @@ public class AccountManagementPane extends VBox {
                 while (rs.next()) {
                     AccountInfo accountInfo = new AccountInfo(
                         rs.getString("account_number"),
-                        rs.getString("name"),
+                        rs.getString("customer_name"),
                         rs.getString("account_type"),
                         rs.getDouble("balance")
                     );
@@ -163,8 +189,7 @@ public class AccountManagementPane extends VBox {
             if (account != null) {
                 accountDAO.save(account);
                 
-                // Refresh the account list from database
-                loadAccounts();
+                loadAccounts(); // Auto-refresh
                 
                 showAlert("Success", "Account created successfully!\nAccount Number: " + account.getAccountNumber());
                 initialDepositField.setText("0.00");
@@ -183,6 +208,69 @@ public class AccountManagementPane extends VBox {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    
+    private void deleteAccount(AccountInfo accountInfo) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Delete");
+        confirm.setHeaderText("Delete Account: " + accountInfo.getAccountNumber());
+        confirm.setContentText("Customer: " + accountInfo.getCustomerName() + "\nBalance: BWP " + accountInfo.getBalance() + "\n\nAre you sure?");
+        
+        if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            try {
+                accountDAO.delete(accountInfo.getAccountNumber());
+                loadAccounts(); // Auto-refresh
+                showAlert("Success", "Account deleted successfully!");
+            } catch (SQLException e) {
+                showAlert("Database Error", "Failed to delete account: " + e.getMessage());
+            }
+        }
+    }
+    
+    private void editAccount(AccountInfo accountInfo) {
+        Dialog<Double> dialog = new Dialog<>();
+        dialog.setTitle("Edit Account Balance");
+        dialog.setHeaderText("Account: " + accountInfo.getAccountNumber() + "\nCurrent Balance: BWP " + accountInfo.getBalance());
+        
+        ButtonType saveButtonType = new ButtonType("Update", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+        
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        
+        TextField balanceField = new TextField(String.valueOf(accountInfo.getBalance()));
+        
+        grid.add(new Label("New Balance:"), 0, 0);
+        grid.add(balanceField, 1, 0);
+        
+        dialog.getDialogPane().setContent(grid);
+        
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                try {
+                    return Double.parseDouble(balanceField.getText().trim());
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+            return null;
+        });
+        
+        dialog.showAndWait().ifPresent(newBalance -> {
+            if (newBalance != null && newBalance >= 0) {
+                try {
+                    accountDAO.updateBalance(accountInfo.getAccountNumber(), newBalance);
+                    loadAccounts();
+                    showAlert("Success", "Account balance updated successfully!");
+                } catch (SQLException e) {
+                    showAlert("Database Error", "Failed to update balance: " + e.getMessage());
+                }
+            } else {
+                showAlert("Error", "Invalid balance amount");
+            }
+        });
     }
     
     // Helper class for table display

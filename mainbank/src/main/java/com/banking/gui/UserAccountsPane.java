@@ -1,5 +1,9 @@
 package com.banking.gui;
 
+import com.banking.database.AccountDAO;
+import com.banking.database.CustomerDAO;
+import com.banking.model.Account;
+import com.banking.model.Customer;
 import com.banking.model.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -8,14 +12,23 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 
+import java.sql.SQLException;
+import java.util.List;
+
 public class UserAccountsPane extends VBox {
     private User currentUser;
     private TableView<AccountInfo> accountTable;
     private ObservableList<AccountInfo> accountList;
+    private CustomerDAO customerDAO;
+    private AccountDAO accountDAO;
+    private Label totalAccountsLabel;
+    private Label totalBalanceLabel;
     
     public UserAccountsPane(User user) {
         this.currentUser = user;
         this.accountList = FXCollections.observableArrayList();
+        this.customerDAO = new CustomerDAO();
+        this.accountDAO = new AccountDAO();
         setupUI();
         loadUserAccounts();
     }
@@ -35,8 +48,8 @@ public class UserAccountsPane extends VBox {
         Label summaryTitle = new Label("Account Summary");
         summaryTitle.setStyle("-fx-font-weight: bold;");
         
-        Label totalAccountsLabel = new Label("Total Accounts: 0");
-        Label totalBalanceLabel = new Label("Total Balance: $0.00");
+        totalAccountsLabel = new Label("Total Accounts: 0");
+        totalBalanceLabel = new Label("Total Balance: BWP 0.00");
         
         summaryBox.getChildren().addAll(summaryTitle, totalAccountsLabel, totalBalanceLabel);
         
@@ -48,10 +61,7 @@ public class UserAccountsPane extends VBox {
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(e -> loadUserAccounts());
         
-        Button requestAccountButton = new Button("Request New Account");
-        requestAccountButton.setOnAction(e -> showAlert("Info", "Account request functionality not implemented yet."));
-        
-        buttonBox.getChildren().addAll(refreshButton, requestAccountButton);
+        buttonBox.getChildren().add(refreshButton);
         
         getChildren().addAll(title, summaryBox, new Label("My Account Details:"), accountTable, buttonBox);
     }
@@ -80,15 +90,47 @@ public class UserAccountsPane extends VBox {
     }
     
     private void loadUserAccounts() {
-        // For demo purposes - in a real app you'd load user's accounts from database
         accountList.clear();
-        // Add sample data
-        accountList.add(new AccountInfo("ACC123456", "Savings", 1500.00, "Active"));
-        accountList.add(new AccountInfo("ACC789012", "Cheque", 750.50, "Active"));
+        
+        try {
+            Customer customer = customerDAO.findByUserId(currentUser.getUserId());
+            
+            if (customer != null) {
+                List<Account> accounts = accountDAO.findByCustomerId(customer.getCustomerId());
+                
+                double totalBalance = 0.0;
+                for (Account account : accounts) {
+                    accountList.add(new AccountInfo(
+                        account.getAccountNumber(),
+                        getAccountTypeName(account),
+                        account.getBalance(),
+                        "Active"
+                    ));
+                    totalBalance += account.getBalance();
+                }
+                
+                totalAccountsLabel.setText("Total Accounts: " + accounts.size());
+                totalBalanceLabel.setText(String.format("Total Balance: BWP %.2f", totalBalance));
+            } else {
+                totalAccountsLabel.setText("Total Accounts: 0");
+                totalBalanceLabel.setText("Total Balance: BWP 0.00");
+            }
+        } catch (SQLException e) {
+            showAlert("Database Error", "Failed to load accounts: " + e.getMessage());
+        }
+    }
+    
+    public void refresh() {
+        loadUserAccounts();
+    }
+    
+    private String getAccountTypeName(Account account) {
+        String className = account.getClass().getSimpleName();
+        return className.replace("Account", "");
     }
     
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
