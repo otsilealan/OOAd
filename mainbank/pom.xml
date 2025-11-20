@@ -60,6 +60,9 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>com.banking.gui.BankingApp</mainClass>
+                    <options>
+                        <option>--add-exports=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</option>
+                    </options>
                 </configuration>
             </plugin>
         </plugins>
