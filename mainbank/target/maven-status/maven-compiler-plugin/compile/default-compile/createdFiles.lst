@@ -1,3 +1,4 @@
+com/banking/util/SimpleAnalyzer.class
 com/banking/gui/LoginPane.class
 com/banking/database/UserDAO.class
 com/banking/gui/AccountManagementPane$AccountInfo.class
@@ -13,9 +14,12 @@ com/banking/gui/AdminDashboard.class
 com/banking/model/ChequeAccount.class
 com/banking/gui/AccountManagementPane.class
 com/banking/gui/BankingApp.class
+com/banking/gui/CustomerManagementPane$1.class
 com/banking/controller/BankController.class
+com/banking/gui/AccountManagementPane$1.class
 com/banking/interfaces/BankingOperations.class
 com/banking/database/DatabaseManager.class
+com/banking/util/LinkUserToCustomer.class
 com/banking/gui/UserProfilePane.class
 com/banking/model/Customer.class
 com/banking/database/CustomerDAO.class
@@ -23,8 +27,12 @@ com/banking/model/Account.class
 com/banking/gui/UserDashboard.class
 com/banking/gui/UserManagementPane.class
 com/banking/gui/CustomerManagementPane.class
+com/banking/gui/TransactionPane.class
+com/banking/util/DatabaseAnalyzer.class
 com/banking/model/SavingsAccount.class
 com/banking/model/User.class
 com/banking/database/AccountDAO.class
 com/banking/BankingSystemApp.class
+com/banking/util/DatabaseMigration.class
+com/banking/util/FixNameColumn.class
 com/banking/DataInserter.class

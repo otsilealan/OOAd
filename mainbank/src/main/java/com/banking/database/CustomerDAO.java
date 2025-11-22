@@ -8,7 +8,7 @@ import java.util.List;
 public class CustomerDAO {
     
     public void save(Customer customer) throws SQLException {
-        String sql = "INSERT INTO customers (user_id, first_name, surname, address, phone, email, name) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO customers (user_id, first_name, surname, address, phone, email) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
@@ -18,7 +18,6 @@ public class CustomerDAO {
             stmt.setString(4, customer.getAddress());
             stmt.setString(5, customer.getPhoneNumber());
             stmt.setString(6, customer.getEmail());
-            stmt.setString(7, customer.getName()); // Also populate NAME for backward compatibility
             stmt.executeUpdate();
             
             try (ResultSet keys = stmt.getGeneratedKeys()) {
@@ -111,7 +110,7 @@ public class CustomerDAO {
     }
     
     public void update(Customer customer) throws SQLException {
-        String sql = "UPDATE customers SET first_name = ?, surname = ?, email = ?, phone = ?, address = ?, name = ? WHERE id = ?";
+        String sql = "UPDATE customers SET first_name = ?, surname = ?, email = ?, phone = ?, address = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, customer.getFirstName());
@@ -119,8 +118,7 @@ public class CustomerDAO {
             stmt.setString(3, customer.getEmail());
             stmt.setString(4, customer.getPhoneNumber());
             stmt.setString(5, customer.getAddress());
-            stmt.setString(6, customer.getName());
-            stmt.setLong(7, customer.getCustomerId());
+            stmt.setLong(6, customer.getCustomerId());
             stmt.executeUpdate();
         }
     }

@@ -16,6 +16,8 @@ This is a Java-based banking system that demonstrates Object-Oriented Programmin
 - Java 11 or higher
 - Maven 3.6 or higher
 
+**Windows Users**: See [WINDOWS_SETUP.md](WINDOWS_SETUP.md) for detailed Windows installation and setup instructions.
+
 ## Running the Application
 
 ### GUI Mode (Default)

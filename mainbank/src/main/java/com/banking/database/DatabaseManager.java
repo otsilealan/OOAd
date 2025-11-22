@@ -14,8 +14,22 @@ public class DatabaseManager {
     public static void initializeDatabase() {
         try (Connection conn = getConnection()) {
             createTables(conn);
+            migrateSchema(conn);
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+    
+    private static void migrateSchema(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+            // Check if user_id column exists, if not add it
+            try {
+                stmt.execute("SELECT user_id FROM customers LIMIT 1");
+            } catch (SQLException e) {
+                // Column doesn't exist, add it
+                stmt.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS user_id BIGINT");
+                stmt.execute("ALTER TABLE customers ADD FOREIGN KEY IF NOT EXISTS (user_id) REFERENCES users(id) ON DELETE CASCADE");
+            }
         }
     }
     
